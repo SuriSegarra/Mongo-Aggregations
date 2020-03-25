@@ -25,4 +25,17 @@ const prepare = model => JSON.parse(JSON.stringify(model));
 const prepareAll = models => models.map(prepare);
 
 //reading our models directory
-const files = fs.readdirSync('../lib/')
+const files = fs.readdirSync('../lib/models');
+const getters = files
+  .map(file => require(`../lib/models/${file}`))
+  .filter(Model => Model.prototype instanceof mongoose.Model)
+  .reduce((acc, Model) => {
+    return {
+      ...acc,
+      [`get${Model.modelName}`]: query => Model.findOne(query).then(prepare),
+      [`get${Model.modelName}s`]: query => Model.find(query).then(prepareAll)
+    };
+  });
+
+module.exports = getters;
+
